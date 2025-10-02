@@ -2,47 +2,47 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Admin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AdminAuthController extends Controller
 {
-    // Formularz logowania
+    /**
+     * Pokaż formularz logowania admina
+     */
     public function showLoginForm()
     {
         return view('admin.login');
     }
 
-    // Obsługa logowania
+    /**
+     * Obsłuż logowanie admina
+     */
     public function login(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        $credentials = $request->only('email', 'password');
 
-        $admin = Admin::where('email', $request->email)->first();
+        if (Auth::attempt($credentials)) {
+            $request->session()->regenerate();
 
-        if ($admin && Hash::check($request->password, $admin->password)) {
-            // Zaloguj admina do sesji
-            session(['admin_id' => $admin->id]);
-
-            return redirect()->route('admin.dashboard')
-                ->with('success', 'Zalogowano pomyślnie!');
+            // 👇 po zalogowaniu zawsze kieruj do panelu admina
+            return redirect()->intended('/admin/dashboard');
         }
 
         return back()->withErrors([
-            'email' => 'Nieprawidłowy login lub hasło.',
-        ]);
+            'email' => '❌ Nieprawidłowe dane logowania.',
+        ])->withInput();
     }
 
-    // Wylogowanie
+    /**
+     * Wylogowanie admina
+     */
     public function logout(Request $request)
     {
-        $request->session()->forget('admin_id');
-        return redirect()->route('admin.login')
-            ->with('success', 'Wylogowano pomyślnie!');
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect('/admin/login')->with('success', '✅ Wylogowano pomyślnie.');
     }
 }
