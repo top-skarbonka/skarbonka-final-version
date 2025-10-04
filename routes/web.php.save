@@ -1,11 +1,10 @@
-<?php
+7uyg d<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\CompanyAuthController;
 
 // ==========================
 // STRONA GŁÓWNA
@@ -58,19 +57,8 @@ Route::prefix('admin/companies')->group(function () {
     Route::post('/', [CompanyController::class, 'store'])->name('companies.store');             // zapis nowej firmy
     Route::get('/{company}/edit', [CompanyController::class, 'edit'])->name('companies.edit');  // edycja
     Route::put('/{company}', [CompanyController::class, 'update'])->name('companies.update');   // aktualizacja
-    Route::delete('/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy'); // usuwanie
+    Route::delete('/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy'); // usuwanie (soft delete)
 });
-
-// ==========================
-// PANEL FIRMY (LOGOWANIE)
-// ==========================
-Route::get('/company/login', [CompanyAuthController::class, 'showLoginForm'])->name('company.login');
-Route::post('/company/login', [CompanyAuthController::class, 'login'])->name('company.login.submit');
-Route::post('/company/logout', [CompanyAuthController::class, 'logout'])->name('company.logout');
-
-Route::get('/company/dashboard', function () {
-    return view('company.dashboard');
-})->middleware('auth:company')->name('company.dashboard');
 
 // ==========================
 // AUTH (Breeze, zwykli userzy)
