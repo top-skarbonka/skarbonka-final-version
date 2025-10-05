@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('points', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('company_id'); // firma, która przyznała punkty
+            $table->string('customer_code')->nullable(); // np. kod klienta z QR
+            $table->decimal('amount_spent', 10, 2)->default(0); // kwota z paragonu
+            $table->decimal('points_awarded', 10, 2)->default(0); // ile punktów przyznano
+            $table->string('receipt_number')->nullable(); // numer paragonu
+            $table->timestamps();
+
+            // relacja z firmą
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('points');
+    }
+};
