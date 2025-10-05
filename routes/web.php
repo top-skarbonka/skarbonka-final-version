@@ -6,6 +6,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CompanyAuthController;
+use App\Http\Controllers\PointDemoController;
 
 // ==========================
 // STRONA GŁÓWNA
@@ -53,12 +54,12 @@ Route::get('/admin/dashboard', function () {
 // ZARZĄDZANIE FIRMAMI (ADMIN)
 // ==========================
 Route::prefix('admin/companies')->group(function () {
-    Route::get('/', [CompanyController::class, 'index'])->name('companies.index');              // lista firm
-    Route::get('/create', [CompanyController::class, 'create'])->name('companies.create');      // formularz rejestracji
-    Route::post('/', [CompanyController::class, 'store'])->name('companies.store');             // zapis nowej firmy
-    Route::get('/{company}/edit', [CompanyController::class, 'edit'])->name('companies.edit');  // edycja
-    Route::put('/{company}', [CompanyController::class, 'update'])->name('companies.update');   // aktualizacja
-    Route::delete('/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy'); // usuwanie
+    Route::get('/', [CompanyController::class, 'index'])->name('companies.index');
+    Route::get('/create', [CompanyController::class, 'create'])->name('companies.create');
+    Route::post('/', [CompanyController::class, 'store'])->name('companies.store');
+    Route::get('/{company}/edit', [CompanyController::class, 'edit'])->name('companies.edit');
+    Route::put('/{company}', [CompanyController::class, 'update'])->name('companies.update');
+    Route::delete('/{company}', [CompanyController::class, 'destroy'])->name('companies.destroy');
 });
 
 // ==========================
@@ -76,3 +77,9 @@ Route::get('/company/dashboard', function () {
 // AUTH (Breeze, zwykli userzy)
 // ==========================
 require __DIR__.'/auth.php';
+
+// ==========================
+// DEMO PRZYZNAWANIA PUNKTÓW
+// ==========================
+Route::get('/points-demo', [PointDemoController::class, 'index']);
+Route::post('/points-demo', [PointDemoController::class, 'store']);
