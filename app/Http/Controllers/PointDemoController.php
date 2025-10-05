@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Point;
+use App\Models\Client;
 
 class PointDemoController extends Controller
 {
@@ -24,7 +25,14 @@ class PointDemoController extends Controller
             'amount_spent' => 'required|numeric',
         ]);
 
-        // Zapis z automatycznym przeliczeniem punktów (jeśli masz boot() w modelu)
+        // 🔍 Sprawdzenie, czy klient istnieje w tabeli clients
+        $clientExists = Client::where('id', $data['client_id'])->exists();
+
+        if (!$clientExists) {
+            return redirect()->back()->with('error', '❌ Klient o podanym ID nie istnieje!');
+        }
+
+        // 🧾 Zapis rekordu
         $point = Point::create([
             'company_id' => $data['company_id'],
             'client_id' => $data['client_id'],
@@ -32,6 +40,6 @@ class PointDemoController extends Controller
             'amount_spent' => $data['amount_spent'],
         ]);
 
-        return redirect()->back()->with('success', 'Dodano punkty! ID rekordu: ' . $point->id);
+        return redirect()->back()->with('success', '✅ Dodano punkty! ID rekordu: ' . $point->id);
     }
 }

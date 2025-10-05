@@ -16,7 +16,11 @@
 </head>
 <body>
   <h1>Demo przyznawania punktów</h1>
-
+  @if(session('error'))
+  <div class="msg" style="background:#ffe6e6; border:1px solid #f99; padding:10px; margin-bottom:15px;">
+    {{ session('error') }}
+  </div>
+  @endif
   @if(session('success'))
     <div class="msg">{{ session('success') }}</div>
   @endif
