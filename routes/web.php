@@ -1,4 +1,4 @@
-<?php
+k<?php
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
@@ -7,6 +7,7 @@ use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CompanyAuthController;
 use App\Http\Controllers\PointDemoController;
+use App\Http\Controllers\ClientController;
 
 // ==========================
 // STRONA GŁÓWNA
@@ -32,7 +33,7 @@ Route::middleware('auth')->group(function () {
 });
 
 // ==========================
-// POSTY (przykład testowy)
+// POSTY (testowy przykład)
 // ==========================
 Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
 
@@ -63,7 +64,7 @@ Route::prefix('admin/companies')->group(function () {
 });
 
 // ==========================
-// PANEL FIRMY (LOGOWANIE)
+// PANEL FIRMY
 // ==========================
 Route::get('/company/login', [CompanyAuthController::class, 'showLoginForm'])->name('company.login');
 Route::post('/company/login', [CompanyAuthController::class, 'login'])->name('company.login.submit');
@@ -74,12 +75,20 @@ Route::get('/company/dashboard', function () {
 })->middleware('auth:company')->name('company.dashboard');
 
 // ==========================
-// AUTH (Breeze, zwykli userzy)
+// AUTH (Breeze)
 // ==========================
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // ==========================
 // DEMO PRZYZNAWANIA PUNKTÓW
 // ==========================
 Route::get('/points-demo', [PointDemoController::class, 'index']);
 Route::post('/points-demo', [PointDemoController::class, 'store']);
+
+// ==========================
+// PANEL KLIENTA – Rejestracja i kod QR
+// ==========================
+Route::get('/client/register', [ClientController::class, 'showRegisterForm'])->name('client.register');
+Route::post('/client/register', [ClientController::class, 'register'])->name('client.register.submit');
+Route::get('/client/qr/{id}', [ClientController::class, 'showQr'])->name('client.qr');
+Route::get('/client/dashboard', [ClientController::class, 'dashboard'])->name('client.dashboard');

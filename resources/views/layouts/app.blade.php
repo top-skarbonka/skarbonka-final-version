@@ -16,6 +16,19 @@
         {{-- Górny pasek / menu --}}
         @include('layouts.navigation')
 
+        {{-- Pasek użytkownika (opcjonalny) --}}
+        <div class="bg-white shadow-sm p-4 text-center">
+            @auth
+                <span class="text-gray-700 font-medium">
+                    👋 Witaj, {{ Auth::user()->name }}
+                </span>
+            @else
+                <span class="text-gray-500">
+                    Witaj, Gościu 👋
+                </span>
+            @endauth
+        </div>
+
         {{-- Główna zawartość --}}
         <main class="flex-grow">
             @yield('content')
@@ -23,7 +36,9 @@
 
         {{-- Stopka --}}
         <footer class="bg-gray-200 text-center py-4 mt-4">
-            <p class="text-sm text-gray-600">© {{ date('Y') }} {{ config('app.name', 'Laravel') }}. Wszelkie prawa zastrzeżone.</p>
+            <p class="text-sm text-gray-600">
+                © {{ date('Y') }} {{ config('app.name', 'Laravel') }}. Wszelkie prawa zastrzeżone.
+            </p>
         </footer>
     </div>
 </body>
