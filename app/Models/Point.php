@@ -10,18 +10,13 @@ class Point extends Model
     use HasFactory;
 
     protected $fillable = [
-        'company_id',   // firma, która przyznała punkty
-        'client_id',    // klient, który otrzymał punkty
-        'receipt_number', // numer paragonu
-        'amount',       // kwota paragonu
-        'points',       // przeliczone punkty
+        'client_id',
+        'amount',
+        'source',
     ];
 
-    /**
-     * Relacja z firmą
-     */
-    public function company()
+    public function client()
     {
-        return $this->belongsTo(Company::class);
+        return $this->belongsTo(Client::class);
     }
 }
