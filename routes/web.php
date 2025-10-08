@@ -9,6 +9,7 @@ use App\Http\Controllers\CompanyAuthController;
 use App\Http\Controllers\PointDemoController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientSettingsController;
+use App\Http\Controllers\ClientAuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -16,14 +17,22 @@ use App\Http\Controllers\ClientSettingsController;
 |--------------------------------------------------------------------------
 */
 Route::prefix('client')->group(function () {
+    // 🔓 Publiczne — logowanie, rejestracja, QR
+    Route::get('/login', [ClientAuthController::class, 'showLoginForm'])->name('client.login');
+    Route::post('/login', [ClientAuthController::class, 'login'])->name('client.login.submit');
+    Route::post('/logout', [ClientAuthController::class, 'logout'])->name('client.logout');
+
     Route::get('/register', [ClientController::class, 'showRegisterForm'])->name('client.register');
     Route::post('/register', [ClientController::class, 'register'])->name('client.register.submit');
     Route::get('/qr/{id}', [ClientController::class, 'showQr'])->name('client.qr');
-    Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('client.dashboard');
 
-    // Zgody marketingowe
-    Route::get('/consents', [ClientSettingsController::class, 'edit'])->name('client.consents.edit');
-    Route::post('/consents', [ClientSettingsController::class, 'update'])->name('client.consents.update');
+    // 🔐 Zabezpieczone logowaniem
+    Route::middleware('auth:client')->group(function () {
+        Route::get('/dashboard', [ClientController::class, 'dashboard'])->name('client.dashboard');
+        Route::get('/history', [ClientController::class, 'history'])->name('client.history');
+        Route::get('/consents', [ClientSettingsController::class, 'edit'])->name('client.consents.edit');
+        Route::post('/consents', [ClientSettingsController::class, 'update'])->name('client.consents.update');
+    });
 });
 
 /*

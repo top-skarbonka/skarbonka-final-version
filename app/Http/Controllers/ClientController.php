@@ -104,4 +104,14 @@ class ClientController extends Controller
 
         return view('client.dashboard', compact('client', 'points', 'banners'));
     }
+
+    public function history()
+    {
+        $client = \App\Models\Client::first(); // tymczasowo pierwszy klient
+        $points = \App\Models\Point::where('client_id', $client->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('client.history', compact('client', 'points'));
+    }
 }
