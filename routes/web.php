@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientAuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientSettingsController;
 use App\Http\Controllers\PointDemoController;
+use App\Http\Controllers\CompanyRegisterController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,6 +68,10 @@ Route::prefix('company')->group(function () {
     Route::get('/login', [CompanyAuthController::class, 'showLoginForm'])->name('company.login');
     Route::post('/login', [CompanyAuthController::class, 'login'])->name('company.login.submit');
     Route::post('/logout', [CompanyAuthController::class, 'logout'])->name('company.logout');
+
+    // 🏢 Formularz rejestracji firmy
+    Route::get('/register', [CompanyRegisterController::class, 'showForm'])->name('company.register');
+    Route::post('/register', [CompanyRegisterController::class, 'store'])->name('company.register.store');
 
     // 🏢 Panel firmy — tylko dla zalogowanych
     Route::middleware('auth:company')->group(function () {

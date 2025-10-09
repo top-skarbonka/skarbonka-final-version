@@ -33,7 +33,6 @@ return [
             'provider' => 'companies',
         ],
 
-        // 🔐 Panel klienta
         'client' => [
             'driver' => 'session',
             'provider' => 'clients',
@@ -61,7 +60,6 @@ return [
             'model' => App\Models\Company::class,
         ],
 
-        // 🔐 Provider dla klientów
         'clients' => [
             'driver' => 'eloquent',
             'model' => App\Models\Client::class,
@@ -92,7 +90,6 @@ return [
             'expire' => 60,
             'throttle' => 60,
         ],
-        // 🔐 Reset hasła dla klientów
         'clients' => [
             'provider' => 'clients',
             'table' => 'password_reset_tokens',
@@ -107,4 +104,5 @@ return [
     |--------------------------------------------------------------------------
     */
     'password_timeout' => 10800,
+
 ];
