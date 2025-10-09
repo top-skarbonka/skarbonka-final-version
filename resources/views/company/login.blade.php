@@ -1,63 +1,66 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Logowanie firmy</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .login-card {
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            width: 100%;
-            max-width: 400px;
-        }
-        .btn-custom {
-            background-color: #0d6efd;
-            color: white;
-            font-weight: 600;
-            transition: 0.3s;
-        }
-        .btn-custom:hover {
-            background-color: #0b5ed7;
-        }
-    </style>
-</head>
-<body>
-<div class="login-card text-center">
-    <h3 class="mb-4">🔐 Logowanie firmy</h3>
+@extends('layouts.app')
 
-    @if ($errors->any())
-        <div class="alert alert-danger text-start">
-            @foreach ($errors->all() as $error)
-                <div>{{ $error }}</div>
-            @endforeach
-        </div>
-    @endif
+@section('content')
+<div class="min-h-screen bg-gradient-to-b from-purple-100 via-pink-100 to-red-100 flex flex-col justify-center items-center px-6 py-12">
+    
+    <div class="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md fade-in-up">
+        <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">🏢 Logowanie firmy</h2>
+        <p class="text-center text-gray-500 mb-8">Podaj swoje dane dostępowe wysłane przez administratora</p>
 
-    <form method="POST" action="{{ route('company.login.submit') }}">
-        @csrf
-        <div class="mb-3 text-start">
-            <label for="company_id" class="form-label">ID firmy</label>
-            <input type="text" class="form-control" id="company_id" name="company_id" required>
-        </div>
+        {{-- Komunikat o błędzie --}}
+        @if ($errors->any())
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+                @foreach ($errors->all() as $error)
+                    <p>{{ $error }}</p>
+                @endforeach
+            </div>
+        @endif
 
-        <div class="mb-3 text-start">
-            <label for="password" class="form-label">Hasło</label>
-            <input type="password" class="form-control" id="password" name="password" required>
-        </div>
+        {{-- Komunikat sukcesu --}}
+        @if (session('success'))
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+                {{ session('success') }}
+            </div>
+        @endif
 
-        <button type="submit" class="btn btn-custom w-100">Zaloguj się</button>
-    </form>
+        <form method="POST" action="{{ route('company.login.submit') }}" class="space-y-5">
+            @csrf
+
+            <div>
+                <label for="company_id" class="block text-gray-700 font-medium mb-2">ID firmy</label>
+                <input type="text" name="company_id" id="company_id" value="{{ old('company_id') }}"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-purple-300" required autofocus>
+            </div>
+
+            <div>
+                <label for="password" class="block text-gray-700 font-medium mb-2">Hasło</label>
+                <div class="relative">
+                    <input type="password" name="password" id="password"
+                        class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring focus:ring-purple-300" required>
+                    <button type="button" onclick="togglePassword()" class="absolute right-3 top-2 text-gray-500">👁️</button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+                <label class="flex items-center text-gray-700 text-sm">
+                    <input type="checkbox" name="remember" class="mr-2 accent-purple-600">
+                    Zapamiętaj mnie
+                </label>
+                <a href="#" class="text-sm text-purple-600 hover:underline">Nie pamiętasz hasła?</a>
+            </div>
+
+            <button type="submit"
+                class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-2 rounded-lg shadow hover:opacity-90 transition">
+                🔐 Zaloguj się
+            </button>
+        </form>
+    </div>
 </div>
-</body>
-</html>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById('password');
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+</script>
+@endsection

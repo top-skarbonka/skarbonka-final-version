@@ -16,7 +16,7 @@ class CompanyAuthController extends Controller
     }
 
     /**
-     * Logowanie firmy
+     * Logowanie firmy po ID i haśle
      */
     public function login(Request $request)
     {
@@ -25,13 +25,17 @@ class CompanyAuthController extends Controller
             'password'   => 'required|string',
         ]);
 
-        // ✅ Próba logowania przez guard "company"
-        if (Auth::guard('company')->attempt($credentials)) {
+        // ✅ Próba logowania przy użyciu guard 'company'
+        if (Auth::guard('company')->attempt([
+            'company_id' => $credentials['company_id'],
+            'password' => $credentials['password'],
+        ], $request->boolean('remember'))) {
+
             $request->session()->regenerate();
-            return redirect()->route('company.dashboard');
+            return redirect()->route('company.dashboard')->with('success', 'Zalogowano pomyślnie ✅');
         }
 
-        // ❌ Nieprawidłowe dane logowania
+        // ❌ Błąd logowania
         return back()->withErrors([
             'company_id' => '❌ Nieprawidłowe ID firmy lub hasło.',
         ])->onlyInput('company_id');
@@ -46,6 +50,6 @@ class CompanyAuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect()->route('company.login');
+        return redirect()->route('company.login')->with('success', 'Wylogowano pomyślnie.');
     }
 }

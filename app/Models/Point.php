@@ -15,6 +15,11 @@ class Point extends Model
         'source',
     ];
 
+    public function company()
+    {
+        return $this->belongsTo(\App\Models\Company::class);
+    }
+
     public function client()
     {
         return $this->belongsTo(Client::class);

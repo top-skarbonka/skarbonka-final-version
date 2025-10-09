@@ -1,19 +1,17 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\PostController;
-use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\AdminAuthController;
 use App\Http\Controllers\CompanyAuthController;
-use App\Http\Controllers\PointDemoController;
+use App\Http\Controllers\CompanyDashboardController;
+use App\Http\Controllers\ClientAuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientSettingsController;
-use App\Http\Controllers\ClientAuthController;
+use App\Http\Controllers\PointDemoController;
 
 /*
 |--------------------------------------------------------------------------
-| PANEL KLIENTA (priorytetowy)
+| PANEL KLIENTA
 |--------------------------------------------------------------------------
 */
 Route::prefix('client')->group(function () {
@@ -37,11 +35,11 @@ Route::prefix('client')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| STRONA GŁÓWNA (welcome)
+| STRONA GŁÓWNA
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/company/login');
 });
 
 /*
@@ -49,24 +47,33 @@ Route::get('/', function () {
 | PANEL ADMINA
 |--------------------------------------------------------------------------
 */
-Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
-Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-Route::get('/admin/dashboard', function () {
-    return view('admin.dashboard');
-})->name('admin.dashboard');
+Route::prefix('admin')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard');
+    })->name('admin.dashboard');
+});
 
 /*
 |--------------------------------------------------------------------------
 | PANEL FIRMY
 |--------------------------------------------------------------------------
 */
-Route::get('/company/login', [CompanyAuthController::class, 'showLoginForm'])->name('company.login');
-Route::post('/company/login', [CompanyAuthController::class, 'login'])->name('company.login.submit');
-Route::post('/company/logout', [CompanyAuthController::class, 'logout'])->name('company.logout');
-Route::get('/company/dashboard', function () {
-    return view('company.dashboard');
-})->middleware('auth:company')->name('company.dashboard');
+Route::prefix('company')->group(function () {
+    // 🔓 Logowanie i wylogowanie firmy
+    Route::get('/login', [CompanyAuthController::class, 'showLoginForm'])->name('company.login');
+    Route::post('/login', [CompanyAuthController::class, 'login'])->name('company.login.submit');
+    Route::post('/logout', [CompanyAuthController::class, 'logout'])->name('company.logout');
+
+    // 🏢 Panel firmy — tylko dla zalogowanych
+    Route::middleware('auth:company')->group(function () {
+        Route::get('/dashboard', [CompanyDashboardController::class, 'index'])->name('company.dashboard');
+        Route::post('/add-qr-points', [CompanyDashboardController::class, 'addQrPoints'])->name('company.addQrPoints');
+    });
+});
 
 /*
 |--------------------------------------------------------------------------
