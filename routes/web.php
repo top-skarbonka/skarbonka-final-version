@@ -2,13 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminAuthController;
-use App\Http\Controllers\CompanyAuthController;
-use App\Http\Controllers\CompanyDashboardController;
 use App\Http\Controllers\ClientAuthController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ClientSettingsController;
 use App\Http\Controllers\PointDemoController;
 use App\Http\Controllers\CompanyRegisterController;
+use App\Http\Controllers\CompanyAuthController;
+use App\Http\Controllers\CompanyDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,19 +64,18 @@ Route::prefix('admin')->group(function () {
 |--------------------------------------------------------------------------
 */
 Route::prefix('company')->group(function () {
-    // 🔓 Logowanie i wylogowanie firmy
+    // 🔓 Logowanie i rejestracja firmy
     Route::get('/login', [CompanyAuthController::class, 'showLoginForm'])->name('company.login');
     Route::post('/login', [CompanyAuthController::class, 'login'])->name('company.login.submit');
     Route::post('/logout', [CompanyAuthController::class, 'logout'])->name('company.logout');
 
-    // 🏢 Formularz rejestracji firmy
     Route::get('/register', [CompanyRegisterController::class, 'showForm'])->name('company.register');
     Route::post('/register', [CompanyRegisterController::class, 'store'])->name('company.register.store');
 
-    // 🏢 Panel firmy — tylko dla zalogowanych
+    // 🧭 Panel firmy po zalogowaniu
     Route::middleware('auth:company')->group(function () {
         Route::get('/dashboard', [CompanyDashboardController::class, 'index'])->name('company.dashboard');
-        Route::post('/add-qr-points', [CompanyDashboardController::class, 'addQrPoints'])->name('company.addQrPoints');
+        Route::post('/add-points', [CompanyDashboardController::class, 'addPoints'])->name('company.addPoints');
     });
 });
 

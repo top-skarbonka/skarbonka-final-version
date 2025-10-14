@@ -1,200 +1,101 @@
-@extends('layouts.app')
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel firmy - {{ $company->name ?? 'Panel firmy' }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {font-family: 'Inter', sans-serif; background:#111827; color:white; margin:0; padding:0;}
+        .container {max-width:900px; margin:40px auto; background:#1f2937; padding:30px; border-radius:16px;}
+        h1 {color:#facc15; text-align:center; margin-bottom:25px;}
+        input {padding:10px; border-radius:8px; border:none; outline:none; background:#374151; color:white; width:100%;}
+        input::placeholder {color:#9ca3af;}
+        button {background:#facc15; color:#111827; font-weight:600; padding:12px; border:none; border-radius:8px; cursor:pointer;}
+        button:hover {background:#eab308;}
+        .alert {padding:10px; border-radius:8px; text-align:center; font-weight:600; margin-bottom:15px;}
+        .alert-success {background-color:#16a34a; color:white;}
+        .alert-error {background-color:#dc2626; color:white;}
+        .form-row {display:flex; gap:10px; justify-content:space-between; margin-bottom:20px;}
+        .stats {display:flex; justify-content:space-around; margin-top:30px;}
+        .stat {background:#111827; padding:15px; border-radius:10px; width:22%; text-align:center;}
+        .stat h3 {color:#facc15; margin:0;}
+        .chart-container {margin-top:40px; background:#111827; padding:20px; border-radius:12px;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏢 Panel firmy: {{ $company->name }}</h1>
 
-@section('content')
-<div class="min-h-screen bg-gray-900 text-gray-200 p-6">
-    <div class="max-w-6xl mx-auto space-y-6">
+    {{-- 🔔 komunikat dynamiczny --}}
+    <div id="responseMessage"></div>
 
-        {{-- 🔹 Nagłówek --}}
-        <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold">Panel Firmy: {{ $company->name }}</h1>
-
-            <form action="{{ route('company.logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded text-white">
-                    Wyloguj
-                </button>
-            </form>
+    {{-- 🧾 Formularz --}}
+    <form id="addPointsForm">
+        @csrf
+        <div class="form-row">
+            <input type="text" name="client_id" placeholder="ID klienta (np. 5736)" required>
+            <input type="text" name="receipt_number" placeholder="Numer paragonu / faktury" required>
+            <input type="number" step="0.01" name="amount" placeholder="Kwota z paragonu (zł)" required>
         </div>
+        <button type="submit">➕ Dodaj punkty</button>
+    </form>
 
-        {{-- 🔹 Statystyki --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-gray-800 p-5 rounded-lg shadow text-center">
-                <p class="text-gray-400">Łączna liczba punktów</p>
-                <h2 class="text-3xl font-bold text-yellow-400">{{ number_format($totalPoints, 0, ',', ' ') }}</h2>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow text-center">
-                <p class="text-gray-400">Punkty w tym miesiącu</p>
-                <h2 class="text-3xl font-bold text-blue-400">{{ number_format($monthPoints, 0, ',', ' ') }}</h2>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow text-center">
-                <p class="text-gray-400">Nowi klienci z polecenia</p>
-                <h2 class="text-3xl font-bold text-green-400">{{ $clientsCount }}</h2>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow text-center">
-                <p class="text-gray-400">Twój kod zaproszeniowy</p>
-                <h2 class="text-xl font-semibold text-pink-400 select-all">{{ $company->invite_code }}</h2>
-            </div>
-        </div>
+    {{-- 📊 Statystyki --}}
+    <div class="stats">
+        <div class="stat"><h3>Tydzień</h3><p id="week">{{ $weeklyPoints ?? 0 }}</p></div>
+        <div class="stat"><h3>Miesiąc</h3><p id="month">{{ $monthlyPoints ?? 0 }}</p></div>
+        <div class="stat"><h3>Rok</h3><p id="year">{{ $yearlyPoints ?? 0 }}</p></div>
+        <div class="stat"><h3>Łącznie</h3><p id="total">{{ $totalPoints ?? 0 }}</p></div>
+    </div>
 
-        {{-- 🔹 Formularz dodawania punktów --}}
-        <div class="bg-gray-800 p-6 rounded-lg shadow space-y-4">
-            <h2 class="text-xl font-semibold mb-3">Dodaj punkty</h2>
-
-            <form action="{{ route('company.addQrPoints') }}" method="POST" class="space-y-4">
-                @csrf
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">ID Klienta / Kod QR</label>
-                        <div class="flex space-x-2">
-                            <input type="text" name="client_id" id="client_id"
-                                class="w-full bg-gray-700 text-white rounded px-3 py-2 focus:ring focus:ring-yellow-400"
-                                placeholder="Zeskanuj kod QR lub wpisz ID" required>
-                            <button type="button" id="startScan"
-                                class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold px-4 rounded">
-                                📷
-                            </button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Numer paragonu / FV</label>
-                        <input type="text" name="receipt_number"
-                            class="w-full bg-gray-700 text-white rounded px-3 py-2 focus:ring focus:ring-yellow-400"
-                            placeholder="np. FV/2025/01" required>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Kwota</label>
-                        <input type="number" step="0.01" name="amount_spent"
-                            class="w-full bg-gray-700 text-white rounded px-3 py-2 focus:ring focus:ring-yellow-400"
-                            placeholder="np. 250.00" required>
-                    </div>
-                </div>
-
-                <div class="col-span-full flex justify-end">
-                    <button type="submit"
-                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold px-6 py-2 rounded-lg transition">
-                        ➕ Dodaj punkty
-                    </button>
-                </div>
-            </form>
-        </div>
-
-        {{-- 🔹 Wykresy --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="bg-gray-800 p-5 rounded-lg shadow">
-                <h2 class="text-lg font-semibold mb-3">Punkty w ostatnich dniach</h2>
-                <canvas id="pointsBarChart"></canvas>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow">
-                <h2 class="text-lg font-semibold mb-3">Udział klientów w punktach</h2>
-                <canvas id="pointsPieChart"></canvas>
-            </div>
-        </div>
-
-        {{-- 🔹 Ostatnie transakcje --}}
-        <div class="bg-gray-800 p-5 rounded-lg shadow">
-            <h2 class="text-lg font-semibold mb-3">Ostatnie dodane punkty</h2>
-            <table class="min-w-full text-sm">
-                <thead class="border-b border-gray-700 text-gray-400">
-                    <tr>
-                        <th class="px-3 py-2 text-left">ID Klienta</th>
-                        <th class="px-3 py-2 text-left">Kwota</th>
-                        <th class="px-3 py-2 text-left">Punkty</th>
-                        <th class="px-3 py-2 text-left">Paragon / FV</th>
-                        <th class="px-3 py-2 text-left">Data</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach(\App\Models\Point::where('company_id', $company->id)->latest()->take(10)->get() as $point)
-                        <tr class="border-b border-gray-700 hover:bg-gray-700/50 transition">
-                            <td class="px-3 py-2">{{ $point->client_id }}</td>
-                            <td class="px-3 py-2">{{ number_format($point->amount_spent, 2, ',', ' ') }} zł</td>
-                            <td class="px-3 py-2 text-yellow-400 font-semibold">{{ $point->points_awarded }}</td>
-                            <td class="px-3 py-2">{{ $point->receipt_number }}</td>
-                            <td class="px-3 py-2">{{ $point->created_at->format('d.m.Y H:i') }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    {{-- 📈 Wykres --}}
+    <div class="chart-container">
+        <canvas id="pointsChart"></canvas>
     </div>
 </div>
-
-{{-- 📷 Modal QR --}}
-<div id="qrModal" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-    <div class="bg-gray-800 p-5 rounded-lg w-96 text-center">
-        <h2 class="text-lg font-semibold mb-3 text-yellow-400">Skanuj kod QR</h2>
-        <video id="preview" class="rounded w-full"></video>
-        <button id="closeScan"
-            class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">Zamknij</button>
-    </div>
-</div>
-
-{{-- 📈 Chart.js i QR Scanner --}}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
 
 <script>
-const barCtx = document.getElementById('pointsBarChart');
-new Chart(barCtx, {
-    type: 'bar',
+const ctx = document.getElementById('pointsChart').getContext('2d');
+const chartData = @json($chartData ?? []);
+const chart = new Chart(ctx, {
+    type: 'line',
     data: {
-        labels: {!! json_encode(array_keys($weeklyPoints->toArray())) !!},
+        labels: chartData.map(i => i.date),
         datasets: [{
-            label: 'Punkty dziennie',
-            data: {!! json_encode(array_values($weeklyPoints->toArray())) !!},
-            backgroundColor: 'rgba(255, 206, 86, 0.8)',
+            label: 'Punkty przyznane (ostatnie 7 dni)',
+            data: chartData.map(i => i.total),
+            borderColor: '#facc15',
+            backgroundColor: 'rgba(250,204,21,0.2)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
         }]
     },
-    options: {
-        plugins: { legend: { display: false } },
-        scales: { y: { beginAtZero: true, ticks: { color: '#ccc' }}, x: { ticks: { color: '#ccc' }}}
-    }
+    options: {scales:{x:{ticks:{color:'white'}},y:{ticks:{color:'white'}}},plugins:{legend:{labels:{color:'white'}}}}
 });
 
-const pieCtx = document.getElementById('pointsPieChart');
-new Chart(pieCtx, {
-    type: 'pie',
-    data: {
-        labels: ['Nowi klienci', 'Stali klienci'],
-        datasets: [{
-            data: [{{ $clientsCount }}, {{ $totalPoints }}],
-            backgroundColor: ['#4ade80', '#60a5fa']
-        }]
-    },
-});
+// 🧠 AJAX obsługa formularza
+$('#addPointsForm').on('submit', function(e) {
+    e.preventDefault();
+    $('#responseMessage').html('');
 
-const startBtn = document.getElementById('startScan');
-const modal = document.getElementById('qrModal');
-const closeBtn = document.getElementById('closeScan');
-let scanner;
-
-startBtn.addEventListener('click', () => {
-    modal.classList.remove('hidden');
-    scanner = new Html5Qrcode("preview");
-    scanner.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        qrCodeMessage => {
-            document.getElementById('client_id').value = qrCodeMessage;
-            stopScanner();
+    $.ajax({
+        url: "{{ route('company.addPoints') }}",
+        method: "POST",
+        data: $(this).serialize(),
+        success: function(response) {
+            $('#responseMessage').html('<div class="alert alert-success">✅ Punkty dodane pomyślnie!</div>');
+            $('#addPointsForm')[0].reset();
         },
-        errorMessage => {}
-    );
-});
-
-async function stopScanner() {
-    try {
-        if (scanner) {
-            await scanner.stop();
-            await scanner.clear();
+        error: function(xhr) {
+            let msg = xhr.responseJSON?.message || '❌ Wystąpił błąd podczas dodawania punktów.';
+            $('#responseMessage').html('<div class="alert alert-error">' + msg + '</div>');
         }
-    } catch (e) {
-        console.warn('Błąd przy zatrzymaniu skanera:', e);
-    } finally {
-        modal.classList.add('hidden');
-    }
-}
-
-closeBtn.addEventListener('click', stopScanner);
+    });
+});
 </script>
-@endsection
+</body>
+</html>

@@ -25,9 +25,16 @@ class Client extends Model
     protected $table = 'clients';
 
     // 🔹 Pola, które można wypełniać masowo
-    protected $fillable = [
-        'name',
-        'email',
-        'referred_by',
-    ];
+protected $fillable = [
+    'name',
+    'email',
+    'postal_code',
+    'city',
+    'phone',
+    'birth_year',
+    'gender',
+    'referred_by',
+    'client_code',
+    'points'
+];
 }

@@ -2,38 +2,33 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Company extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+
+    protected $table = 'companies';
 
     protected $fillable = [
         'company_id',
-        'invite_code',
-        'company_code',
         'name',
+        'email',
+        'password',
+        'status',
+        'point_ratio',
         'postal_code',
         'city',
         'street',
         'nip',
-        'email',
         'phone',
-        'point_ratio',
-        'password',
-        'status',
+        'banner_path',
+        'invite_code',
+        'company_code'
     ];
 
     protected $hidden = [
         'password',
-        'remember_token',
     ];
-
-    // 🔑 Klucz logowania — używamy company_id zamiast email
-    public function getAuthIdentifierName()
-    {
-        return 'company_id';
-    }
 }

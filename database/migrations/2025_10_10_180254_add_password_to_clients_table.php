@@ -9,14 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->unsignedBigInteger('referred_by')->nullable()->after('email');
+            if (!Schema::hasColumn('clients', 'password')) {
+                $table->string('password')->nullable()->after('consent_personal');
+            }
         });
     }
 
     public function down(): void
     {
         Schema::table('clients', function (Blueprint $table) {
-            $table->dropColumn('referred_by');
+            if (Schema::hasColumn('clients', 'password')) {
+                $table->dropColumn('password');
+            }
         });
     }
 };
