@@ -4,50 +4,60 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Point;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class CompanyDashboardController extends Controller
 {
+    // 📊 Panel główny firmy
     public function index()
     {
-        // ✅ Pobierz zalogowaną firmę
-        $company = auth('company')->user();
+        $company = Auth::guard('company')->user();
 
-        if (!$company) {
-            return redirect()->route('company.login')->with('error', 'Musisz być zalogowany jako firma.');
-        }
-
-        // ✅ Statystyki
+        // 🧮 Statystyki punktów
         $weeklyPoints = Point::where('company_id', $company->id)
-            ->whereBetween('created_at', [now()->startOfWeek(), now()->endOfWeek()])
+            ->where('created_at', '>=', Carbon::now()->subDays(7))
             ->sum('points_awarded');
 
         $monthlyPoints = Point::where('company_id', $company->id)
-            ->whereMonth('created_at', now()->month)
+            ->where('created_at', '>=', Carbon::now()->subDays(30))
             ->sum('points_awarded');
 
         $yearlyPoints = Point::where('company_id', $company->id)
-            ->whereYear('created_at', now()->year)
+            ->where('created_at', '>=', Carbon::now()->subDays(365))
             ->sum('points_awarded');
 
-        $chartData = Point::where('company_id', $company->id)
-            ->orderBy('created_at')
-            ->get(['created_at', 'points_awarded']);
+        // 📈 Dane do wykresu (ostatnie 7 dni)
+        $chartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = Carbon::now()->subDays($i)->toDateString();
+            $points = Point::where('company_id', $company->id)
+                ->whereDate('created_at', $date)
+                ->sum('points_awarded');
+            $chartData[] = ['date' => $date, 'points' => $points];
+        }
 
-        // ✅ PRZEKAZUJEMY $company do widoku!
-        return view('company.dashboard', [
-            'company' => $company,
-            'weeklyPoints' => $weeklyPoints,
-            'monthlyPoints' => $monthlyPoints,
-            'yearlyPoints' => $yearlyPoints,
-            'chartData' => $chartData,
-        ]);
+        // 📋 Historia ostatnich 20 przyznań punktów
+        $pointsHistory = Point::where('company_id', $company->id)
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        return view('company.dashboard', compact(
+            'company',
+            'weeklyPoints',
+            'monthlyPoints',
+            'yearlyPoints',
+            'chartData',
+            'pointsHistory'
+        ));
     }
 
+    // 🪙 Dodawanie punktów
     public function addPoints(Request $request)
     {
         try {
-            Log::info('📥 addPoints() dane wejściowe:', $request->all());
+            \Log::info('📥 addPoints() dane wejściowe:', $request->all());
 
             $validated = $request->validate([
                 'client_id' => 'required|string',
@@ -56,15 +66,16 @@ class CompanyDashboardController extends Controller
             ]);
 
             $company = auth('company')->user();
+
             if (!$company) {
-                Log::error('❌ Firma nie jest zalogowana!');
+                \Log::error('❌ Firma nie jest zalogowana!');
                 return back()->with('error', 'Błąd autoryzacji firmy.');
             }
 
-            $ratio = $company->point_ratio ?? 0.5;
+            $ratio = $company->point_ratio ?? 1.0;
             $points = $validated['amount'] * $ratio;
 
-            Point::create([
+            $record = Point::create([
                 'company_id' => $company->id,
                 'client_id' => $validated['client_id'],
                 'receipt_number' => $validated['receipt_number'],
@@ -72,15 +83,10 @@ class CompanyDashboardController extends Controller
                 'points_awarded' => $points,
             ]);
 
-            Log::info('✅ Punkty zapisane pomyślnie!', [
-                'client_id' => $validated['client_id'],
-                'company_id' => $company->id,
-                'points' => $points,
-            ]);
-
+            \Log::info('💾 ZAPISANO REKORD DO BAZY:', $record->toArray());
             return back()->with('success', 'Punkty dodane pomyślnie!');
         } catch (\Exception $e) {
-            Log::error('❌ Błąd addPoints(): ' . $e->getMessage());
+            \Log::error('❌ Błąd addPoints(): ' . $e->getMessage());
             return back()->with('error', 'Błąd podczas dodawania punktów.');
         }
     }

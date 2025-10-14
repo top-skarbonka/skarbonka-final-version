@@ -1,101 +1,66 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel firmy - {{ $company->name ?? 'Panel firmy' }}</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <style>
-        body {font-family: 'Inter', sans-serif; background:#111827; color:white; margin:0; padding:0;}
-        .container {max-width:900px; margin:40px auto; background:#1f2937; padding:30px; border-radius:16px;}
-        h1 {color:#facc15; text-align:center; margin-bottom:25px;}
-        input {padding:10px; border-radius:8px; border:none; outline:none; background:#374151; color:white; width:100%;}
-        input::placeholder {color:#9ca3af;}
-        button {background:#facc15; color:#111827; font-weight:600; padding:12px; border:none; border-radius:8px; cursor:pointer;}
-        button:hover {background:#eab308;}
-        .alert {padding:10px; border-radius:8px; text-align:center; font-weight:600; margin-bottom:15px;}
-        .alert-success {background-color:#16a34a; color:white;}
-        .alert-error {background-color:#dc2626; color:white;}
-        .form-row {display:flex; gap:10px; justify-content:space-between; margin-bottom:20px;}
-        .stats {display:flex; justify-content:space-around; margin-top:30px;}
-        .stat {background:#111827; padding:15px; border-radius:10px; width:22%; text-align:center;}
-        .stat h3 {color:#facc15; margin:0;}
-        .chart-container {margin-top:40px; background:#111827; padding:20px; border-radius:12px;}
-    </style>
-</head>
-<body>
-<div class="container">
-    <h1>🏢 Panel firmy: {{ $company->name }}</h1>
+@extends('layouts.app')
 
-    {{-- 🔔 komunikat dynamiczny --}}
-    <div id="responseMessage"></div>
-
-    {{-- 🧾 Formularz --}}
-    <form id="addPointsForm">
-        @csrf
-        <div class="form-row">
-            <input type="text" name="client_id" placeholder="ID klienta (np. 5736)" required>
-            <input type="text" name="receipt_number" placeholder="Numer paragonu / faktury" required>
-            <input type="number" step="0.01" name="amount" placeholder="Kwota z paragonu (zł)" required>
+@section('content')
+<div class="min-h-screen bg-gray-900 text-white flex flex-col items-center justify-start py-10">
+    <div class="w-full max-w-4xl bg-gray-800 rounded-2xl shadow-lg p-6">
+        <div class="flex justify-between items-center mb-6 border-b border-gray-700 pb-3">
+            <h1 class="text-3xl font-bold">📊 Panel firmy</h1>
+            
+            <!-- 🔓 Wylogowanie -->
+            <form action="{{ route('company.logout') }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition">
+                    🚪 Wyloguj
+                </button>
+            </form>
         </div>
-        <button type="submit">➕ Dodaj punkty</button>
-    </form>
 
-    {{-- 📊 Statystyki --}}
-    <div class="stats">
-        <div class="stat"><h3>Tydzień</h3><p id="week">{{ $weeklyPoints ?? 0 }}</p></div>
-        <div class="stat"><h3>Miesiąc</h3><p id="month">{{ $monthlyPoints ?? 0 }}</p></div>
-        <div class="stat"><h3>Rok</h3><p id="year">{{ $yearlyPoints ?? 0 }}</p></div>
-        <div class="stat"><h3>Łącznie</h3><p id="total">{{ $totalPoints ?? 0 }}</p></div>
-    </div>
+        <!-- ✅ Komunikaty -->
+        @if (session('success'))
+            <div class="bg-green-600 text-white p-3 rounded mb-4">{{ session('success') }}</div>
+        @endif
+        @if (session('error'))
+            <div class="bg-red-600 text-white p-3 rounded mb-4">{{ session('error') }}</div>
+        @endif
 
-    {{-- 📈 Wykres --}}
-    <div class="chart-container">
-        <canvas id="pointsChart"></canvas>
+        <!-- 🏪 Informacje o firmie -->
+        <div class="mb-6">
+            <p><strong>Nazwa firmy:</strong> {{ auth('company')->user()->name }}</p>
+            <p><strong>E-mail:</strong> {{ auth('company')->user()->email }}</p>
+            <p><strong>ID firmy:</strong> {{ auth('company')->user()->company_id }}</p>
+            <p><strong>Przelicznik punktów:</strong> {{ auth('company')->user()->point_ratio }}</p>
+        </div>
+
+        <!-- ➕ Formularz dodawania punktów -->
+        <h2 class="text-xl font-semibold mb-4">➕ Dodaj punkty klientowi</h2>
+
+        <form method="POST" action="{{ route('company.addPoints') }}" class="space-y-4">
+            @csrf
+            <div>
+                <label for="client_id" class="block mb-1">ID klienta:</label>
+                <input type="text" name="client_id" id="client_id" class="w-full p-2 rounded bg-gray-700 text-white" required>
+            </div>
+
+            <div>
+                <label for="receipt_number" class="block mb-1">Numer paragonu / faktury:</label>
+                <input type="text" name="receipt_number" id="receipt_number" class="w-full p-2 rounded bg-gray-700 text-white" required>
+            </div>
+
+            <div>
+                <label for="amount" class="block mb-1">Kwota (zł):</label>
+                <input type="number" step="0.01" name="amount" id="amount" class="w-full p-2 rounded bg-gray-700 text-white" required>
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 py-2 rounded font-semibold">
+                💰 Dodaj punkty
+            </button>
+        </form>
+
+        <!-- 📈 Statystyki (placeholder) -->
+        <div class="mt-10 border-t border-gray-700 pt-5">
+            <h2 class="text-xl font-semibold mb-2">📊 Statystyki</h2>
+            <p>Wkrótce tutaj będą wykresy i raporty punktów.</p>
+        </div>
     </div>
 </div>
-
-<script>
-const ctx = document.getElementById('pointsChart').getContext('2d');
-const chartData = @json($chartData ?? []);
-const chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-        labels: chartData.map(i => i.date),
-        datasets: [{
-            label: 'Punkty przyznane (ostatnie 7 dni)',
-            data: chartData.map(i => i.total),
-            borderColor: '#facc15',
-            backgroundColor: 'rgba(250,204,21,0.2)',
-            borderWidth: 3,
-            fill: true,
-            tension: 0.4,
-        }]
-    },
-    options: {scales:{x:{ticks:{color:'white'}},y:{ticks:{color:'white'}}},plugins:{legend:{labels:{color:'white'}}}}
-});
-
-// 🧠 AJAX obsługa formularza
-$('#addPointsForm').on('submit', function(e) {
-    e.preventDefault();
-    $('#responseMessage').html('');
-
-    $.ajax({
-        url: "{{ route('company.addPoints') }}",
-        method: "POST",
-        data: $(this).serialize(),
-        success: function(response) {
-            $('#responseMessage').html('<div class="alert alert-success">✅ Punkty dodane pomyślnie!</div>');
-            $('#addPointsForm')[0].reset();
-        },
-        error: function(xhr) {
-            let msg = xhr.responseJSON?.message || '❌ Wystąpił błąd podczas dodawania punktów.';
-            $('#responseMessage').html('<div class="alert alert-error">' + msg + '</div>');
-        }
-    });
-});
-</script>
-</body>
-</html>
+@endsection
