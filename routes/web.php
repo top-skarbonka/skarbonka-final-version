@@ -9,10 +9,11 @@ use App\Http\Controllers\PointDemoController;
 use App\Http\Controllers\CompanyRegisterController;
 use App\Http\Controllers\CompanyAuthController;
 use App\Http\Controllers\CompanyDashboardController;
+use App\Http\Controllers\ClientDashboardController; // 🆕 Dodane
 
 /*
 |--------------------------------------------------------------------------
-| PANEL KLIENTA
+| PANEL KLIENTA (logowanie klasyczne)
 |--------------------------------------------------------------------------
 */
 Route::prefix('client')->group(function () {
@@ -33,6 +34,14 @@ Route::prefix('client')->group(function () {
         Route::post('/consents', [ClientSettingsController::class, 'update'])->name('client.consents.update');
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| PANEL KLIENTA (po kodzie QR – uproszczony dostęp)
+|--------------------------------------------------------------------------
+*/
+Route::get('/panel-klienta', [ClientDashboardController::class, 'index'])->name('client.panel');
+Route::post('/panel-klienta', [ClientDashboardController::class, 'login'])->name('client.login.qr');
 
 /*
 |--------------------------------------------------------------------------
