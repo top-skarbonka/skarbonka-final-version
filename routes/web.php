@@ -65,6 +65,17 @@ Route::prefix('admin')->group(function () {
     Route::middleware('auth:admin')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+
+        // 🧩 Zarządzanie firmami
+        Route::get('/company/{id}/edit', [AdminDashboardController::class, 'editCompany'])->name('admin.company.edit');
+        Route::get('/company/{id}/toggle', [AdminDashboardController::class, 'toggleCompany'])->name('admin.company.toggle');
+        Route::get('/company/{id}/delete', [AdminDashboardController::class, 'deleteCompany'])->name('admin.company.delete');
+        Route::get('/company/{id}/reset', [AdminDashboardController::class, 'resetCompanyPassword'])->name('admin.company.reset');
+
+        // 👥 Zarządzanie klientami
+        Route::get('/client/{id}/edit', [AdminDashboardController::class, 'editClient'])->name('admin.client.edit');
+        Route::get('/client/{id}/toggle', [AdminDashboardController::class, 'toggleClient'])->name('admin.client.toggle');
+        Route::get('/client/{id}/delete', [AdminDashboardController::class, 'deleteClient'])->name('admin.client.delete');
     });
 });
 
