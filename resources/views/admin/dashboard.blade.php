@@ -1,91 +1,209 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <title>Panel Administratora</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-</head>
-<body class="bg-gray-900 text-gray-100 min-h-screen">
+@extends('layouts.app')
 
-    <div class="max-w-7xl mx-auto py-10 px-6">
-        <h1 class="text-3xl font-bold mb-6">📊 Panel Administratora</h1>
+@section('content')
+<style>
+    body {
+        background-color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+    }
 
-        <!-- Statystyki -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div class="bg-gray-800 p-5 rounded-lg shadow">
-                <p class="text-gray-400 text-sm">Liczba firm</p>
-                <h2 class="text-2xl font-semibold">{{ $totalCompanies }}</h2>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow">
-                <p class="text-gray-400 text-sm">Liczba klientów</p>
-                <h2 class="text-2xl font-semibold">{{ $totalClients }}</h2>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow">
-                <p class="text-gray-400 text-sm">Łączna liczba punktów</p>
-                <h2 class="text-2xl font-semibold">{{ $totalPoints }}</h2>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-lg shadow">
-                <p class="text-gray-400 text-sm">Aktywne firmy</p>
-                <h2 class="text-2xl font-semibold">{{ $activeCompanies }}</h2>
-            </div>
-        </div>
+    .dashboard-card {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+        padding: 25px;
+    }
 
-        <!-- Wykres -->
-        <div class="bg-gray-800 p-6 rounded-lg shadow mb-8">
-            <h2 class="text-xl font-semibold mb-4">Punkty przyznane w ostatnich 7 dniach</h2>
-            <canvas id="pointsChart" height="100"></canvas>
-        </div>
+    h2 {
+        font-weight: 700;
+        color: #1e293b;
+    }
 
-        <!-- Ostatnie firmy -->
-        <div class="bg-gray-800 p-6 rounded-lg shadow">
-            <h2 class="text-xl font-semibold mb-4">Ostatnio dodane firmy</h2>
-            <table class="w-full text-left">
-                <thead>
-                    <tr class="border-b border-gray-700 text-gray-400">
-                        <th class="py-2">Nazwa</th>
-                        <th class="py-2">Email</th>
-                        <th class="py-2">Status</th>
-                        <th class="py-2">Data dodania</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach($recentCompanies as $company)
-                    <tr class="border-b border-gray-800 hover:bg-gray-700 transition">
-                        <td class="py-2">{{ $company->name }}</td>
-                        <td class="py-2">{{ $company->email }}</td>
-                        <td class="py-2">
-                            <span class="px-3 py-1 text-sm rounded-full {{ $company->status === 'active' ? 'bg-green-600' : 'bg-gray-500' }}">
-                                {{ $company->status ?? 'brak' }}
-                            </span>
-                        </td>
-                        <td class="py-2">{{ $company->created_at->format('d.m.Y H:i') }}</td>
-                    </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+    .section-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #0f172a;
+        margin-bottom: 15px;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+
+    th {
+        background: #e2e8f0;
+        color: #1e293b;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+
+    td {
+        padding: 10px 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    tr:hover {
+        background: #f1f5f9;
+    }
+
+    .form-control {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 10px;
+        width: 100%;
+        margin-bottom: 15px;
+    }
+
+    .stats-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2563eb;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+
+    .btn-logout {
+        background-color: #ef4444;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .btn-logout:hover {
+        background-color: #dc2626;
+    }
+</style>
+
+<div class="container py-4">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
+        <h2>👑 Panel Administratora</h2>
+        <form method="POST" action="{{ route('admin.logout') }}">
+            @csrf
+            <button type="submit" class="btn-logout">Wyloguj się</button>
+        </form>
     </div>
 
-    <script>
-        const ctx = document.getElementById('pointsChart').getContext('2d');
-        const pointsChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {!! json_encode(array_keys($pointsByDay->toArray())) !!},
-                datasets: [{
-                    label: 'Punkty',
-                    data: {!! json_encode(array_values($pointsByDay->toArray())) !!},
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                }]
-            },
-            options: {
-                scales: {
-                    y: { beginAtZero: true }
-                }
-            }
-        });
-    </script>
+    <p class="text-muted mb-4">Zarządzaj firmami, klientami i monitoruj wyniki programu.</p>
 
-</body>
-</html>
+    <!-- Lista firm -->
+    <div class="dashboard-card">
+        <h4 class="section-title">🏢 Lista firm</h4>
+        <input type="text" class="form-control" placeholder="🔍 Szukaj po ID lub e-mailu">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nazwa</th>
+                    <th>Email</th>
+                    <th>Miasto</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($companies as $company)
+                <tr>
+                    <td>{{ $company->id }}</td>
+                    <td>{{ $company->name }}</td>
+                    <td>{{ $company->email }}</td>
+                    <td>{{ $company->city ?? '-' }}</td>
+                    <td>
+                        ✏️ ⏸️ 🗑️ 🔁
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Lista klientów -->
+    <div class="dashboard-card">
+        <h4 class="section-title">👥 Lista klientów</h4>
+        <input type="text" class="form-control" placeholder="🔍 Szukaj po ID lub e-mailu">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Imię i nazwisko</th>
+                    <th>Email</th>
+                    <th>Miasto</th>
+                    <th>Punkty</th>
+                    <th>Akcje</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($clients as $client)
+                <tr>
+                    <td>{{ $client->id }}</td>
+                    <td>{{ $client->name }}</td>
+                    <td>{{ $client->email }}</td>
+                    <td>{{ $client->city ?? '-' }}</td>
+                    <td>{{ $client->points ?? 0 }}</td>
+                    <td>
+                        ✏️ ⏸️ 🗑️
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Statystyki tygodniowe -->
+    <div class="dashboard-card">
+        <h4 class="section-title">📊 Statystyki tygodniowe</h4>
+        <div style="display:flex; justify-content:space-around; text-align:center;">
+            <div>
+                <div class="stats-number">{{ $weeklyClients ?? 0 }}</div>
+                <p>Nowych klientów (7 dni)</p>
+            </div>
+            <div>
+                <div class="stats-number">{{ $weeklyCompanies ?? 0 }}</div>
+                <p>Nowych firm (7 dni)</p>
+            </div>
+            <div>
+                <div class="stats-number">{{ $weeklyPoints ?? 0 }}</div>
+                <p>Przyznanych punktów</p>
+            </div>
+        </div>
+
+        <div class="chart-container mt-4">
+            <canvas id="pointsChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('pointsChart');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @json($chartLabels ?? []),
+            datasets: [{
+                label: 'Punkty przyznane (7 dni)',
+                data: @json($chartData ?? []),
+                borderColor: '#2563eb',
+                backgroundColor: 'rgba(37, 99, 235, 0.2)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+</script>
+@endsection

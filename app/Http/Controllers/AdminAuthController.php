@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AdminAuthController extends Controller
 {
     /**
-     * Pokaż formularz logowania admina
+     * Formularz logowania administratora
      */
     public function showLoginForm()
     {
@@ -16,33 +17,43 @@ class AdminAuthController extends Controller
     }
 
     /**
-     * Obsłuż logowanie admina
+     * Obsługa logowania administratora
      */
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
+        // 🧩 Walidacja pól logowania
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:4',
+        ]);
 
-        if (Auth::attempt($credentials)) {
+        Log::info('🔍 Próba logowania admina: ' . $credentials['email']);
+
+        // ✅ Próba logowania przez guard 'admin'
+        if (Auth::guard('admin')->attempt($credentials)) {
             $request->session()->regenerate();
-
-            // 👇 po zalogowaniu zawsze kieruj do panelu admina
-            return redirect()->intended('/admin/dashboard');
+            Log::info('✅ Zalogowano pomyślnie: ' . $credentials['email']);
+            return redirect()->route('admin.dashboard')->with('success', 'Zalogowano pomyślnie!');
         }
 
+        // ❌ Jeśli dane błędne — log i komunikat
+        Log::warning('❌ Błędne dane logowania admina: ' . $credentials['email']);
         return back()->withErrors([
-            'email' => '❌ Nieprawidłowe dane logowania.',
-        ])->withInput();
+            'email' => 'Nieprawidłowy adres e-mail lub hasło.',
+        ]);
     }
 
     /**
-     * Wylogowanie admina
+     * Wylogowanie administratora
      */
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('admin')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/admin/login')->with('success', '✅ Wylogowano pomyślnie.');
+        Log::info('👋 Wylogowano administratora.');
+
+        return redirect()->route('admin.login')->with('success', 'Wylogowano pomyślnie.');
     }
 }

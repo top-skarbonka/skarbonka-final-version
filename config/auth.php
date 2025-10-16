@@ -2,22 +2,10 @@
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Defaults
-    |--------------------------------------------------------------------------
-    */
-
     'defaults' => [
         'guard' => 'web',
         'passwords' => 'users',
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Authentication Guards
-    |--------------------------------------------------------------------------
-    */
 
     'guards' => [
         'web' => [
@@ -25,30 +13,21 @@ return [
             'provider' => 'users',
         ],
 
-        // 👇 GUARD dla firm
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
+        ],
+
         'company' => [
             'driver' => 'session',
             'provider' => 'companies',
         ],
 
-        // 👇 GUARD dla klientów (jeśli masz)
         'client' => [
             'driver' => 'session',
             'provider' => 'clients',
         ],
-
-        // 👇 GUARD dla admina
-        'admin' => [
-            'driver' => 'session',
-            'provider' => 'admins',
-        ],
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | User Providers
-    |--------------------------------------------------------------------------
-    */
 
     'providers' => [
         'users' => [
@@ -56,7 +35,11 @@ return [
             'model' => App\Models\User::class,
         ],
 
-        // 👇 Dla firm – WAŻNE: model musi dziedziczyć po Authenticatable!
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class,
+        ],
+
         'companies' => [
             'driver' => 'eloquent',
             'model' => App\Models\Company::class,
@@ -66,42 +49,37 @@ return [
             'driver' => 'eloquent',
             'model' => App\Models\Client::class,
         ],
-
-        'admins' => [
-            'driver' => 'eloquent',
-            'model' => App\Models\Admin::class,
-        ],
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Password Reset Settings
-    |--------------------------------------------------------------------------
-    */
 
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => 'password_resets',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
 
-        // 👇 Dodaj resetowanie haseł dla firm
+        'admins' => [
+            'provider' => 'admins',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
         'companies' => [
             'provider' => 'companies',
-            'table' => 'password_resets',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'clients' => [
+            'provider' => 'clients',
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Password Confirmation Timeout
-    |--------------------------------------------------------------------------
-    */
-
     'password_timeout' => 10800,
-
 ];
